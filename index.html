@@ -10,69 +10,82 @@
   <title>VUEJS 實戰 - 5倍商城</title>
   <link href="css/bootstrap.min.css" rel="stylesheet">
   <link href="css/blog-home.css" rel="stylesheet">
+  <style>
+
+    *{
+      font-family: '微軟正黑體';
+      letter-spacing: 1px;
+    }
+
+    .btn.active, .btn:active {
+      background: #7bafe7;
+      color: #fff;
+    }
+
+    .price button{
+      margin: 0 4px 8px 0;
+      padding:0; 
+    }
+
+    .price label{
+      margin: 0;
+      padding: 4px 8px;
+      cursor: pointer;
+    }
+
+    .price input{
+      display:none;
+    }
+
+    h3 b,p b{
+      color: rgb(248, 128, 16);
+    }
+
+    .item{
+      position: relative;
+    }
+
+    .item h5{
+      position: absolute;
+      top: 12px;
+      right: 10px;
+      color: #7bafe7;
+    }
+    
+  
+  </style>
 </head>
 
 <body>
   <!-- Page Content -->
   <div id="cart-app" class="container">
-
     <div class="row">
       <div class="col-md-8">
-        <h1 class="page-header">VUEJS 實戰 - <small>5倍商城</small></h1>
-
-        <div class="item">
-          <h2>貓一隻</h2>
-          <img class="item-img img-responsive" src="http://via.placeholder.com/400x400" alt="">
-          <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-          <p class="item-price ">$ 100 </p>
-          <a class="btn btn-primary " href="# ">放入購物車 <span class="glyphicon glyphicon-chevron-right "></span></a>
+        <h1 class="page-header">VUEJS 實戰 - <small>5倍商城 - CHEN EN</small></h1>
+        <p v-if="!notFound">共 {{ newBox2.length }} 件商品</p>
+        <p v-else>抱歉，沒有你搜尋的商品</p>
+        <div class="item" v-for="(item,key) in pageShow" :key="item._id">
+          <h3 v-html="item.name"></h3>
+          <img class="item-img img-responsive" :src="item.picture" :alt="item.name">
+          <p v-html="item.info"></p>
+          <p class="item-price">$ {{ item.price }}</p>
+          <a class="btn btn-primary" href="#" @click.prevent="addItem(item)" v-if="chosed(item)">放入購物車<span class="glyphicon glyphicon-chevron-right"></span></a>
+          <p style="color:rgb(255, 144, 16)" v-else>你已經選購此商品</p>
+          <h5>分類：{{ item.type }}</h5>
         </div>
-
-        <div class="item">
-          <h2>貓一隻</h2>
-          <img class="item-img img-responsive" src="http://via.placeholder.com/400x400" alt="">
-          <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-          <p class="item-price ">$ 100 </p>
-          <a class="btn btn-primary " href="# ">放入購物車 <span class="glyphicon glyphicon-chevron-right "></span></a>
-        </div>
-
-        <div class="item">
-          <h2>貓一隻</h2>
-          <img class="item-img img-responsive" src="http://via.placeholder.com/400x400" alt="">
-          <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-          <p class="item-price ">$ 100 </p>
-          <a class="btn btn-primary " href="# ">放入購物車 <span class="glyphicon glyphicon-chevron-right "></span></a>
-        </div>
-
-        <div class="item">
-          <h2>貓一隻</h2>
-          <img class="item-img img-responsive" src="http://via.placeholder.com/400x400" alt="">
-          <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Lorem ipsum dolor sit amet, consectetur adipisicing elit.</p>
-          <p class="item-price ">$ 100 </p>
-          <a class="btn btn-primary " href="# ">放入購物車 <span class="glyphicon glyphicon-chevron-right "></span></a>
-        </div>
-
-        <hr>
 
         <!--Pager -->
-        <ul class="pagination">
+        <ul class="pagination" v-if="!notFound">
           <li>
-            <a href="#" aria-label="Previous">
+            <a href="#" aria-label="Previous" @click.prevent="pageNow(nowPage-1)">
               <span aria-hidden="true">&laquo;</span>
             </a>
           </li>
-          <li><a href="#">1</a></li>
-          <li><a href="#">2</a></li>
-          <li><a href="#">3</a></li>
-          <li><a href="#">4</a></li>
-          <li><a href="#">5</a></li>
-          <li><a href="#">6</a></li>
-          <li><a href="#">7</a></li>
-          <li><a href="#">8</a></li>
-          <li><a href="#">9</a></li>
-          <li><a href="#">10</a></li>
+          <li v-for="n in totalPage" :class="{active:nowPage==n}">
+            <a href="#" @click.prevent="pageNow(n)">{{ n }}</a>
+          </li>
           <li>
-            <a href="#" aria-label="Next">
+            <a href="#" aria-label="Next" @click.prevent="pageNow(nowPage+1)">
               <span aria-hidden="true">&raquo;</span>
             </a>
           </li>
@@ -84,13 +97,61 @@
       <div class="col-md-4 ">
 
         <div class="well ">
+          <button class="btn btn-defaulte" :class="{active:sort == 'lower'}" @click="sort = 'lower'">價格由低到高</button>
+          <button class="btn btn-defaulte" :class="{active:sort == 'higher'}" @click="sort = 'higher'">價格由高到低</button>
           <h4>商品搜尋</h4>
-          <div class="input-group ">
-            <input type="text" class="form-control">
+          <div class="input-group">
+            <input type="text" placeholder="請輸入想尋找的商品名稱或敘述" class="form-control" v-model.trim="search" @keyup.enter="filter">
             <span class="input-group-btn">
-                <button class="btn btn-default"><span class="glyphicon glyphicon-search "></span></button>
+              <button class="btn btn-default" @click="filter"><span class="glyphicon glyphicon-search "></span></button>
             </span>
           </div>
+          <h4>價格區間</h4>
+          <div class="price">
+            <button class="btn btn-defaulte" :class="{active:choose == 0}">
+              <label><input type="radio" v-model.number="choose" value="0">不限金額</label>
+            </button>
+            <button class="btn btn-defaulte" :class="{active:choose == 1}"><label><input type="radio" v-model.number="choose"
+                  value="1">100元以下</label>
+            </button>
+            <button class="btn btn-defaulte" :class="{active:choose == 2}"><label><input type="radio" v-model.number="choose"
+                  value="2">101元-300元</label>
+            </button>
+            <button class="btn btn-defaulte" :class="{active:choose == 3}"><label><input type="radio" v-model.number="choose"
+                  value="3">301元-500元</label>
+            </button>
+            <button class="btn btn-defaulte" :class="{active:choose == 4}"><label><input type="radio" v-model.number="choose"
+                  value="4">501元以上</label>
+            </button>
+          </div>
+          <h4>類型</h4>
+          <div class="price">
+            <button class="btn btn-defaulte" :class="{active:kind == 'all'}"><label><input type="radio" v-model="kind"
+                  value="all">所有種類</label>
+            </button>
+            <button class="btn btn-defaulte" :class="{active:kind == 'natures'}"><label><input type="radio" v-model="kind"
+                  value="natures">natures</label>
+            </button>
+            <button class="btn btn-defaulte" :class="{active:kind == 'technics'}"><label><input type="radio" v-model="kind"
+                  value="technics">technics</label>
+            </button>
+            <button class="btn btn-defaulte" :class="{active:kind == 'people'}"><label><input type="radio" v-model="kind"
+                  value="people">people</label>
+            </button>
+            <button class="btn btn-defaulte" :class="{active:kind == 'animals'}"><label><input type="radio" v-model="kind"
+                  value="animals">animals</label>
+            </button>
+            <button class="btn btn-defaulte" :class="{active:kind == 'geek'}"><label><input type="radio" v-model="kind"
+                  value="geek">geek</label>
+            </button>
+            <button class="btn btn-defaulte" :class="{active:kind == 'food'}"><label><input type="radio" v-model="kind"
+                  value="food">food</label>
+            </button>
+            <button class="btn btn-defaulte" :class="{active:kind == 'fashion'}"><label><input type="radio" v-model="kind"
+                  value="fashion">fashion</label>
+            </button>
+          </div>
+
           <!-- /.input-group -->
         </div>
 
@@ -98,27 +159,22 @@
 
         <div class="well cart">
           <h4>購物車</h4>
-
-          <ul class="itemsInCart ">
-            <li>
+          <h5>你已經選購 {{ cart.length }} 樣商品，共 {{ totalBuy }} 件</h5>
+          <ul class="itemsInCart">
+            <li v-for="c in cart">
               <div class="cart-item">
-                <div class="cart-title">商品名稱 商品名稱 商品名稱</div> <span class="price">$ 1234</span> x
-                <span class="count">1</span>
-                <div class="handler"><a href="#" class="cart-btn plus">+</a> <a href="#" class="cart-btn minus">-</a></div>
+                <div class="cart-title">{{ c.name }}</div>
+                <span class="price">$ {{ c.price }}</span> x <span class="count">{{ c.number }}</span>
+                <div class="handler">
+                  <a href="#" class="cart-btn plus" @click.prevent="addNumber(c)">+</a>
+                  <a href="#" class="cart-btn minus" @click.prevent="removeNumber(c)">-</a></div>
               </div>
-            </li>
-            <li>
-              <div class="cart-item">
-                <div class="cart-title">商品名稱 商品名稱 商品名稱</div> <span class="price">$ 1234</span> x
-                <span class="count">1</span>
-                <div class="handler"><a href="#" class="cart-btn plus">+</a> <a href="#" class="cart-btn minus">-</a></div>
-              </div>
+              <h6 style="text-align: right;margin-right: 2em;">小計:{{ c.price*c.number }} </h6>
             </li>
           </ul>
           <hr>
-          <p>小計： <span>$ 0</span></p>
+          <p>總計： <span>TWD {{ totalPrice }} 元</span></p>
         </div>
-
       </div>
 
     </div>
@@ -131,5 +187,213 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.13/vue.js"></script>
   <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 
+  <script>
+    var app = new Vue({
+      el: '#cart-app',
+      data: {
+        items: [],
+        newItems: [],
+        newBox: [],
+        newBox2: [],
+        search: '',
+        searchBox: [],
+        catchBox: [],
+        notFound: false,
+        countOfPage: 8,
+        nowPage: 1,
+        cart: [],
+        sort: 'lower',
+        choose: 0,
+        IsFilter: false,
+        kind: 'all'
+      },
+      created() {
+        // 從json拿資料存進items&newItems
+        vm = this;
+        axios.get('./pros-list.json').then(function (response) {
+          vm.items = response.data;
+          vm.newItems = vm.items;
+          vm.newItems.forEach(function (val) {
+            vm.searchBox.push({
+              _id: val._id,
+              name: val.name,
+              price: val.price,
+              info: val.info,
+              picture: val.picture,
+              type: val.type,
+              number: 1,
+            })
+          });
+        })
+      },
+      watch: {
+        choose: function () {
+          // 將頁數預設為第一頁
+          this.nowPage = 1;
+        },
+        kind: function () {
+          // 將頁數預設為第一頁
+          this.nowPage = 1;
+        }
+      },
+      computed: {
+        // 每頁顯示的筆數為初始值加上每頁顯示幾筆
+        pageShow: function () {
+          var vm = this;
+          this.newBox = this.searchBox.filter(function (val) {
+            switch (vm.choose) {
+              case 1: return val.price < 101; break;
+              case 2: return val.price > 100 && val.price < 301; break;
+              case 3: return val.price > 300 && val.price < 501; break;
+              case 4: return val.price > 500; break;
+              default: return val.price > 0;
+            }
+          });
+
+          this.newBox2 = this.newBox.filter(function (val) {
+            switch (vm.kind) {
+              case 'all': return val.price > 0; break;
+              case 'natures': return val.type == 'natures'; break;
+              case 'technics': return val.type == 'technics'; break;
+              case 'people': return val.type == 'people'; break;
+              case 'animals': return val.type == 'animals'; break;
+              case 'geek': return val.type == 'geek'; break;
+              case 'food': return val.type == 'food'; break;
+              case 'fashion': return val.type == 'fashion'; break;
+            };
+          }).sort(function (a, b) {
+            a = a.price;
+            b = b.price;
+            if (vm.sort == 'lower') {
+              return a - b;
+            } else if (vm.sort == 'higher') {
+              return b - a;
+            }
+          })
+
+          this.newBox2 == '' ? this.notFound = true : this.notFound = false;
+          return this.newBox2.slice(this.pageStart, this.pageStart + this.countOfPage)
+        },
+        // 每頁的初始值(第一頁為0)
+        pageStart: function () {
+          return (this.nowPage - 1) * this.countOfPage;
+        },
+        // 總頁數為全部資料數(newItems)除以每頁顯示數量(無條件進位)
+        totalPage: function () {
+          return Math.ceil(this.newBox2.length / this.countOfPage);
+        },
+        totalPrice: function () {
+          if (this.cart == '') {
+            return 0;
+          } else {
+            var p = 0;
+            this.cart.forEach(function (val) {
+              p += val.price * val.number;
+            })
+            return p;
+          }
+        },
+        totalBuy: function () {
+          var p = 0;
+          this.cart.forEach(function (val) {
+            p += val.number;
+          })
+          return p;
+        }
+      },
+      methods: {
+        filter: function () {
+          this.IsFilter = true;
+          this.catchBox = [];
+          this.searchBox = [];
+
+          var vm = this;
+          // 將newItems過濾-過濾條件為search(搜尋文字)與items(原始資料)的標題或敘述相匹配
+          this.newItems = this.items.filter(function (val) {
+            return val.name.toUpperCase().match(vm.search.toUpperCase()) || val.info.toUpperCase().match(vm.search.toUpperCase());
+          });
+
+          this.newItems.forEach(function (val) {
+            var newTitle = val.name;
+            var newInfo = val.info;
+            var keyWord = val.name.toUpperCase().indexOf(vm.search.toUpperCase());
+            var keyWord2 = val.info.toUpperCase().indexOf(vm.search.toUpperCase());
+
+            vm.catchBox.push({
+              _id: val._id,
+              name: val.name,
+              price: val.price,
+              info: val.info,
+              picture: val.picture,
+              type: val.type,
+              number: 1,
+            })
+
+            if (vm.search !== '') {
+              if (keyWord > -1) {
+                newTitle = val.name.slice(0, keyWord) + val.name.slice(keyWord, keyWord + vm.search.length).bold() + val.name.slice(keyWord + vm.search.length);
+              };
+              if (keyWord2 > -1) {
+                newInfo = val.info.slice(0, keyWord2) + val.info.slice(keyWord2, keyWord2 + vm.search.length).bold() + val.info.slice(keyWord2 + vm.search.length);
+              };
+            }
+
+            vm.searchBox.push({
+              _id: val._id,
+              name: newTitle,
+              price: val.price,
+              info: newInfo,
+              picture: val.picture,
+              type: val.type,
+              number: 1,
+            })
+          });
+        },
+        pageNow: function (n) {
+          // 將n的值(點擊時的序號)傳入,顯示為第n頁,範圍最小為1,最大為總頁數
+          if (n > 0 && n < this.totalPage + 1) {
+            this.nowPage = n;
+          }
+        },
+        addItem: function (item) {
+          var find = this.searchBox.findIndex(function (val) {
+            return val._id == item._id;
+          })
+          if (this.IsFilter) {
+            this.cart.push(this.catchBox[find]);
+          } else {
+            this.cart.push(this.searchBox[find]);
+          }
+        },
+        addNumber: function (val) {
+          val.number++;
+        },
+        removeNumber: function (val) {
+          console.log(this.cart.findIndex(function (v) {
+            return v._id === val._id;
+          }))
+          if (val.number > 1) {
+            val.number--;
+          } else {
+            this.cart.splice(this.cart.findIndex(function (v) {
+              return v._id === val._id;
+            }), 1)
+          }
+        },
+        chosed: function (item) {
+          var had = true;
+          this.cart.forEach(function (val) {
+            if (val._id === item._id) {
+              had = false;
+            }
+          })
+          return had;
+        }
+      }
+    })
+  </script>
+
+
 </body>
+
 </html>
